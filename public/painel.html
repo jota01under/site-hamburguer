@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Painel de Pedidos — Tá Chovendo Hambúrguer</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Arial, sans-serif; }
+  body { background: #1a1a1a; color: #fff; min-height: 100vh; padding: 30px 20px; }
+  h1 { text-align: center; color: #ff9500; margin-bottom: 30px; font-size: 2em; }
+  .topo { max-width: 900px; margin: 0 auto 25px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; }
+  .contador-pedidos { background: #2a2a2a; padding: 10px 20px; border-radius: 20px; border: 2px solid #ff6b00; color: #ff9500; font-weight: bold; }
+  .btn-atualizar { background: #ff6b00; color: #1a1a1a; border: none; padding: 10px 20px; border-radius: 10px; font-weight: bold; cursor: pointer; }
+  .btn-atualizar:hover { background: #ff9500; }
+  .lista { max-width: 900px; margin: 0 auto; }
+  .pedido { background: #2a2a2a; border-radius: 15px; padding: 20px; margin-bottom: 15px; border-left: 5px solid #ff6b00; }
+  .pedido.pago { border-left-color: #4caf50; }
+  .pedido.concluido { border-left-color: #2196f3; opacity: 0.6; }
+  .pedido-topo { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 10px; }
+  .pedido-numero { color: #ff9500; font-size: 1.3em; font-weight: bold; }
+  .pedido-data { color: #888; font-size: 0.85em; }
+  .status-badge { padding: 5px 12px; border-radius: 15px; font-size: 0.8em; font-weight: bold; }
+  .status-pendente { background: #ff6b00; color: #1a1a1a; }
+  .status-pago { background: #4caf50; color: #fff; }
+  .status-concluido { background: #2196f3; color: #fff; }
+  .cliente-info { background: #333; padding: 12px; border-radius: 10px; margin-bottom: 15px; font-size: 0.9em; line-height: 1.6; }
+  .cliente-info strong { color: #ff6b00; }
+  .pedido-itens { background: #1a1a1a; padding: 15px; border-radius: 10px; margin-bottom: 15px; }
+  .pedido-itens ul { list-style: none; }
+  .pedido-itens li { padding: 8px 0; border-bottom: 1px solid #333; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 5px; }
+  .pedido-itens li:last-child { border-bottom: none; }
+  .item-nome { color: #fff; font-weight: bold; }
+  .item-detalhe { color: #aaa; font-size: 0.85em; display: block; }
+  .item-preco { color: #ff9500; font-weight: bold; }
+  .pedido-rodape { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
+  .pedido-total { color: #4caf50; font-size: 1.3em; font-weight: bold; }
+  .acoes { display: flex; gap: 10px; flex-wrap: wrap; }
+  .btn-acao { border: none; padding: 8px 16px; border-radius: 8px; font-weight: bold; cursor: pointer; color: #fff; }
+  .btn-pagar { background: #4caf50; }
+  .btn-pagar:hover { background: #66bb6a; }
+  .btn-concluir { background: #2196f3; }
+  .btn-concluir:hover { background: #42a5f5; }
+  .sem-pedidos { text-align: center; color: #888; padding: 60px 20px; font-size: 1.1em; }
+  .voltar { display: block; text-align: center; margin-top: 30px; color: #ff9500; text-decoration: none; font-weight: bold; }
+  .login { max-width: 400px; margin: 100px auto; background: #2a2a2a; padding: 40px 30px; border-radius: 20px; border: 2px solid #ff6b00; text-align: center; }
+  .login h2 { color: #ff9500; margin-bottom: 20px; }
+  .login input { width: 100%; padding: 12px; border-radius: 10px; border: 1px solid #333; background: #1a1a1a; color: #fff; font-size: 1em; margin-bottom: 15px; text-align: center; }
+  .login button { width: 100%; background: #ff6b00; color: #1a1a1a; border: none; padding: 12px; border-radius: 10px; font-weight: bold; font-size: 1em; cursor: pointer; }
+  .login button:hover { background: #ff9500; }
+</style>
+</head>
+<body>
+
+<div class="login" id="login">
+  <h2>🔒 Painel de Pedidos</h2>
+  <input type="password" id="senha" placeholder="Digite a senha" onkeypress="if(event.key==='Enter')entrar()">
+  <button onclick="entrar()">Entrar</button>
+</div>
+
+<div id="painel" style="display:none;">
+  <h1>📋 Painel de Pedidos</h1>
+  <div class="topo">
+    <div class="contador-pedidos" id="contador">Carregando...</div>
+    <button class="btn-atualizar" onclick="carregarPedidos()">🔄 Atualizar</button>
+  </div>
+  <div class="lista" id="lista">
+    <div class="sem-pedidos">Carregando pedidos...</div>
+  </div>
+  <a href="/" class="voltar">← Voltar pro site</a>
+</div>
+
+<script>
+let senhaAtual = '';
+let ultimoTotal = 0;
+let primeiraCarga = true;
+
+function entrar() {
+  const s = document.getElementById('senha').value;
+  if (!s) { alert('Digite a senha!'); return; }
+  senhaAtual = s;
+  document.getElementById('login').style.display = 'none';
+  document.getElementById('painel').style.display = 'block';
+  carregarPedidos();
+  setInterval(carregarPedidos, 10000);
+}
+
+function pedirPermissaoNotificacao() {
+  if ('Notification' in window && Notification.permission === 'default') {
+    Notification.requestPermission();
+  }
+}
+
+function tocarAlerta() {
+  const audio = new AudioContext();
+  const osc = audio.createOscillator();
+  const gain = audio.createGain();
+  osc.connect(gain);
+  gain.connect(audio.destination);
+  osc.frequency.value = 800;
+  osc.type = 'sine';
+  gain.gain.setValueAtTime(0.3, audio.currentTime);
+  gain.gain.exponentialRampToValueAtTime(0.01, audio.currentTime + 0.5);
+  osc.start();
+  osc.stop(audio.currentTime + 0.5);
+}
+
+function carregarPedidos() {
+  fetch('/api/pedidos?senha=' + encodeURIComponent(senhaAtual))
+    .then(function(res) { return res.json(); })
+    .then(function(pedidos) {
+      if (pedidos.erro) {
+        alert('Senha incorreta!');
+        document.getElementById('login').style.display = 'block';
+        document.getElementById('painel').style.display = 'none';
+        return;
+      }
+
+      const lista = document.getElementById('lista');
+      const contador = document.getElementById('contador');
+      contador.textContent = pedidos.length + ' pedido(s)';
+
+      if (!primeiraCarga && pedidos.length > ultimoTotal) {
+        tocarAlerta();
+        if ('Notification' in window && Notification.permission === 'granted') {
+          new Notification('🍔 Novo pedido!', { body: 'Caiu um pedido novo no painel!' });
+        }
+        document.title = '🔴 NOVO PEDIDO! — Painel';
+      } else if (pedidos.length === ultimoTotal) {
+        document.title = 'Painel de Pedidos — Tá Chovendo Hambúrguer';
+      }
+
+      ultimoTotal = pedidos.length;
+      primeiraCarga = false;
+
+      if (pedidos.length === 0) {
+        lista.innerHTML = '<div class="sem-pedidos">Nenhum pedido ainda 😴</div>';
+        return;
+      }
+
+      let html = '';
+      pedidos.forEach(function(p) {
+        const itens = JSON.parse(p.itens);
+        let itensHtml = '';
+        itens.forEach(function(item) {
+          itensHtml += '<li><div><span class="item-nome">' + item.nome + '</span>';
+          if (item.detalhe) itensHtml += '<span class="item-detalhe">' + item.detalhe + '</span>';
+          itensHtml += '</div><span class="item-preco">R$ ' + item.preco + ',00</span></li>';
+        });
+
+        let classe = '';
+        let statusTexto = '';
+        let statusClasse = '';
+
+        if (p.status === 'concluido') {
+          classe = 'concluido';
+          statusTexto = '✓ Concluído';
+          statusClasse = 'status-concluido';
+        } else if (p.pago === 1) {
+          classe = 'pago';
+          statusTexto = '💰 Pago';
+          statusClasse = 'status-pago';
+        } else {
+          statusTexto = '⏳ Aguardando pagamento';
+          statusClasse = 'status-pendente';
+        }
+
+        html += '<div class="pedido ' + classe + '">';
+        html += '<div class="pedido-topo"><span class="pedido-numero">Pedido #' + p.id + '</span>';
+        html += '<div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;"><span class="status-badge ' + statusClasse + '">' + statusTexto + '</span>';
+        html += '<span class="pedido-data">' + p.data + '</span></div></div>';
+        html += '<div class="cliente-info">';
+        html += '<strong>👤 Cliente:</strong> ' + (p.cliente || 'Não informado') + '<br>';
+        html += '<strong>📱 Telefone:</strong> ' + (p.telefone || 'Não informado') + '<br>';
+        html += '<strong>📍 Endereço:</strong> ' + (p.endereco || 'Não informado') + '<br>';
+        html += '<strong>💳 Pagamento:</strong> ' + (p.pagamento || 'Não informado');
+        html += '</div>';
+        html += '<div class="pedido-itens"><ul>' + itensHtml + '</ul></div>';
+        html += '<div class="pedido-rodape"><span class="pedido-total">Total: R$ ' + p.total.toFixed(2).replace('.', ',') + '</span>';
+        html += '<div class="acoes">';
+        if (p.status !== 'concluido') {
+          if (p.pago !== 1) {
+            html += '<button class="btn-acao btn-pagar" onclick="marcarPago(' + p.id + ')">💰 Confirmar Pagamento</button>';
+          }
+          html += '<button class="btn-acao btn-concluir" onclick="concluir(' + p.id + ')">✓ Concluir</button>';
+        } else {
+          html += '<span style="color:#4caf50;font-weight:bold;">✓ Concluído</span>';
+        }
+        html += '</div></div></div>';
+      });
+
+      lista.innerHTML = html;
+    })
+    .catch(function() {
+      document.getElementById('lista').innerHTML = '<div class="sem-pedidos">Erro ao carregar 😢</div>';
+    });
+}
+
+function marcarPago(id) {
+  if (!confirm('Confirmar que o pagamento do pedido #' + id + ' foi recebido?')) return;
+  fetch('/api/pedido/' + id + '/pagar?senha=' + encodeURIComponent(senhaAtual), { method: 'POST' })
+    .then(function(res) { return res.json(); })
+    .then(function() { carregarPedidos(); });
+}
+
+function concluir(id) {
+  if (!confirm('Concluir o pedido #' + id + '?')) return;
+  fetch('/api/pedido/' + id + '/concluir?senha=' + encodeURIComponent(senhaAtual), { method: 'POST' })
+    .then(function(res) { return res.json(); })
+    .then(function() { carregarPedidos(); });
+}
+
+pedirPermissaoNotificacao();
+</script>
+
+</body>
+</html>

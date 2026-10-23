@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tá Chovendo Hambúrguer</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Arial, sans-serif; }
+  body { background: #1a1a1a; color: #fff; min-height: 100vh; padding-bottom: 90px; overflow-x: hidden; }
+  .fundo-tinta { position: fixed; inset: 0; z-index: 0; pointer-events: none; opacity: 0.15; }
+  .fundo-tinta .mancha { position: absolute; border-radius: 50%; background: radial-gradient(circle, #ff6b00 0%, transparent 70%); }
+  .m1 { width: 400px; height: 400px; top: 10%; left: -100px; }
+  .m2 { width: 300px; height: 300px; top: 40%; right: -80px; }
+  .m3 { width: 500px; height: 500px; bottom: 10%; left: 20%; }
+  .m4 { width: 250px; height: 250px; top: 70%; right: 10%; }
+  header { background: linear-gradient(135deg, #ff6b00 0%, #ff9500 100%); padding: 50px 20px 60px; text-align: center; box-shadow: 0 4px 30px rgba(255, 107, 0, 0.5); position: relative; z-index: 2; overflow: hidden; }
+  header::before, header::after { content: ''; position: absolute; border-radius: 50%; background: rgba(0,0,0,0.08); }
+  header::before { width: 200px; height: 200px; top: -80px; left: -60px; }
+  header::after { width: 150px; height: 150px; bottom: -60px; right: -40px; }
+  header img { max-width: 180px; width: 100%; margin-bottom: 15px; border-radius: 50%; border: 4px solid #1a1a1a; box-shadow: 0 8px 25px rgba(0,0,0,0.4); position: relative; z-index: 2; animation: flutuar 3s ease-in-out infinite; }
+  @keyframes flutuar { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
+  header h1 { font-size: 3em; color: #1a1a1a; letter-spacing: 3px; text-shadow: 3px 3px 0 rgba(255,255,255,0.25); position: relative; z-index: 2; font-weight: 900; }
+  header .subtitulo-topo { color: #1a1a1a; font-size: 1.15em; margin-top: 10px; font-style: italic; opacity: 0.9; position: relative; z-index: 2; }
+  header .badges { margin-top: 20px; display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; position: relative; z-index: 2; }
+  header .badge { background: #1a1a1a; color: #ff9500; padding: 6px 15px; border-radius: 20px; font-size: 0.85em; font-weight: bold; }
+  .frase-canto { position: fixed; z-index: 1; pointer-events: none; color: #ff6b00; opacity: 0.35; font-size: 1.3em; font-weight: bold; font-style: italic; text-shadow: 0 0 10px rgba(255,107,0,0.5); }
+  .frase-1 { top: 200px; left: 15px; transform: rotate(-12deg); }
+  .frase-2 { top: 45%; right: 20px; transform: rotate(10deg); }
+  .frase-3 { top: 65%; left: 25px; transform: rotate(-6deg); }
+  .abas { display: flex; justify-content: center; gap: 10px; padding: 20px; flex-wrap: wrap; background: #111; position: sticky; top: 0; z-index: 10; border-bottom: 2px solid #ff6b00; }
+  .aba { background: #2a2a2a; color: #fff; border: 2px solid #ff6b00; padding: 10px 22px; border-radius: 25px; cursor: pointer; font-size: 0.95em; font-weight: bold; transition: 0.3s; }
+  .aba:hover, .aba.ativa { background: #ff6b00; color: #1a1a1a; transform: scale(1.05); }
+  .conteudo { display: none; padding: 30px 20px; max-width: 1200px; margin: 0 auto; position: relative; z-index: 2; }
+  .conteudo.ativo { display: block; animation: fadeIn 0.5s; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+  .titulo-secao { text-align: center; color: #ff9500; font-size: 2em; margin: 10px 0 5px; }
+  .subtitulo-secao { text-align: center; color: #aaa; font-style: italic; margin-bottom: 30px; font-size: 0.95em; }
+  .grade { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px; }
+  .item { background: #2a2a2a; border-radius: 15px; overflow: hidden; border: 2px solid #333; display: flex; flex-direction: column; transition: 0.3s; }
+  .item:hover { border-color: #ff6b00; box-shadow: 0 10px 30px rgba(255, 107, 0, 0.35); transform: translateY(-5px); }
+  .item img { width: 100%; height: 180px; object-fit: cover; display: block; }
+  .item-info { padding: 15px; text-align: center; flex: 1; display: flex; flex-direction: column; }
+  .item-info h3 { color: #ff9500; font-size: 1.15em; margin-bottom: 8px; }
+  .item-info .preco { display: inline-block; background: #ff6b00; color: #1a1a1a; padding: 5px 15px; border-radius: 15px; font-weight: bold; font-size: 0.95em; margin-bottom: 12px; }
+  .btn-add { margin-top: auto; background: #ff6b00; color: #1a1a1a; border: none; padding: 10px; border-radius: 10px; font-weight: bold; font-size: 1em; cursor: pointer; transition: 0.2s; }
+  .btn-add:hover { background: #ff9500; transform: scale(1.03); }
+  .sobre { max-width: 900px; margin: 40px auto 20px; padding: 40px 25px; background: rgba(255, 107, 0, 0.08); border-left: 5px solid #ff6b00; border-radius: 15px; text-align: center; position: relative; z-index: 2; }
+  .sobre h2 { color: #ff9500; font-size: 1.8em; margin-bottom: 15px; }
+  .sobre p { color: #ddd; line-height: 1.7; font-size: 1em; margin-bottom: 10px; }
+  .diferenciais { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; max-width: 900px; margin: 30px auto; padding: 0 20px; position: relative; z-index: 2; }
+  .diferencial { background: #2a2a2a; padding: 25px 15px; border-radius: 15px; text-align: center; border: 2px solid #333; transition: 0.3s; }
+  .diferencial:hover { border-color: #ff6b00; transform: translateY(-5px); }
+  .diferencial .icone { font-size: 2.5em; display: block; margin-bottom: 10px; }
+  .diferencial h4 { color: #ff9500; margin-bottom: 8px; }
+  .diferencial p { color: #aaa; font-size: 0.9em; }
+  .carrinho-flutuante { position: fixed; bottom: 20px; right: 20px; background: #ff6b00; color: #1a1a1a; width: 65px; height: 65px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.8em; cursor: pointer; z-index: 50; box-shadow: 0 6px 25px rgba(255, 107, 0, 0.7); transition: 0.3s; animation: pulse 2s infinite; }
+  .carrinho-flutuante:hover { transform: scale(1.15); animation: none; }
+  @keyframes pulse { 0%, 100% { box-shadow: 0 6px 25px rgba(255, 107, 0, 0.7); } 50% { box-shadow: 0 6px 35px rgba(255, 107, 0, 1); } }
+  .contador { position: absolute; top: -5px; right: -5px; background: #1a1a1a; color: #ff9500; border: 2px solid #ff6b00; border-radius: 50%; width: 26px; height: 26px; font-size: 0.55em; display: flex; align-items: center; justify-content: center; font-weight: bold; }
+  .modal-fundo { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 100; align-items: center; justify-content: center; padding: 20px; }
+  .modal-fundo.ativo { display: flex; }
+  .modal { background: #2a2a2a; border-radius: 20px; padding: 25px; max-width: 450px; width: 100%; border: 2px solid #ff6b00; max-height: 90vh; overflow-y: auto; }
+  .modal h2 { color: #ff9500; margin-bottom: 20px; text-align: center; }
+  .opcao-grupo { margin-bottom: 20px; }
+  .opcao-grupo h4 { color: #ff6b00; margin-bottom: 10px; font-size: 1em; }
+  .opcao { display: flex; align-items: center; background: #1a1a1a; padding: 10px 15px; border-radius: 10px; margin-bottom: 8px; cursor: pointer; border: 1px solid #333; transition: 0.2s; }
+  .opcao:hover { border-color: #ff6b00; }
+  .opcao input { margin-right: 10px; accent-color: #ff6b00; cursor: pointer; }
+  .opcao span { cursor: pointer; flex: 1; color: #fff; }
+  .botoes-modal { display: flex; gap: 10px; margin-top: 20px; }
+  .btn { flex: 1; padding: 12px; border-radius: 12px; border: none; cursor: pointer; font-weight: bold; font-size: 1em; transition: 0.2s; }
+  .btn-cancelar { background: #444; color: #fff; }
+  .btn-confirmar { background: #ff6b00; color: #1a1a1a; }
+  .btn-confirmar:hover { background: #ff9500; }
+  .btn-cancelar:hover { background: #555; }
+  .lista-carrinho { margin-bottom: 15px; }
+  .linha-carrinho { display: flex; justify-content: space-between; align-items: center; background: #1a1a1a; padding: 12px; border-radius: 10px; margin-bottom: 8px; border-left: 4px solid #ff6b00; }
+  .linha-carrinho .info-item { flex: 1; }
+  .linha-carrinho .nome { color: #ff9500; font-weight: bold; font-size: 0.95em; }
+  .linha-carrinho .detalhe { color: #aaa; font-size: 0.8em; }
+  .linha-carrinho .valor { color: #fff; font-weight: bold; margin: 0 10px; }
+  .btn-remover { background: #c0392b; color: #fff; border: none; width: 28px; height: 28px; border-radius: 50%; cursor: pointer; font-weight: bold; }
+  .total-linha { display: flex; justify-content: space-between; padding: 15px 0; border-top: 2px solid #ff6b00; margin-top: 10px; font-size: 1.2em; font-weight: bold; color: #ff9500; }
+  .carrinho-vazio { text-align: center; color: #888; padding: 30px 10px; }
+  footer { background: #111; color: #999; padding: 40px 20px 20px; text-align: center; border-top: 3px solid #ff6b00; position: relative; z-index: 2; margin-top: 40px; }
+  footer .footer-titulo { color: #ff9500; font-size: 1.4em; margin-bottom: 15px; font-weight: bold; }
+  footer .info-grid { display: flex; justify-content: center; gap: 40px; flex-wrap: wrap; margin-bottom: 25px; }
+  footer .info-grid div { font-size: 0.95em; line-height: 1.8; }
+  footer .info-grid strong { color: #ff6b00; display: block; margin-bottom: 5px; }
+  footer a { color: #ff9500; text-decoration: none; font-weight: bold; }
+  footer a:hover { text-decoration: underline; }
+  footer .copy { border-top: 1px solid #333; padding-top: 20px; font-size: 0.85em; color: #666; }
+  footer .coracao { color: #ff6b00; }
+  .pix-box { background: #fff; padding: 15px; border-radius: 12px; text-align: center; margin: 15px 0; }
+  .pix-box img { max-width: 220px; width: 100%; display: block; margin: 0 auto; }
+  .pix-codigo { background: #1a1a1a; padding: 10px; border-radius: 8px; font-size: 0.7em; word-break: break-all; color: #aaa; margin-top: 10px; max-height: 80px; overflow-y: auto; }
+  .btn-copiar { background: #4caf50; color: #fff; border: none; padding: 10px; border-radius: 10px; font-weight: bold; cursor: pointer; width: 100%; margin-top: 10px; }
+  .btn-copiar:hover { background: #66bb6a; }
+  @media (max-width: 600px) {
+    header h1 { font-size: 2em; }
+    header .subtitulo-topo { font-size: 1em; }
+    .titulo-secao { font-size: 1.5em; }
+    .frase-canto { display: none; }
+    footer .info-grid { gap: 20px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="fundo-tinta">
+  <div class="mancha m1"></div>
+  <div class="mancha m2"></div>
+  <div class="mancha m3"></div>
+  <div class="mancha m4"></div>
+</div>
+
+<div class="frase-canto frase-1">"Chovendo sabor!"</div>
+<div class="frase-canto frase-2">"Feito com amor 🧡"</div>
+<div class="frase-canto frase-3">"Aqui é sucesso!"</div>
+
+<header>
+  <img src="img/logo.jfif" alt="Tá Chovendo Hambúrguer">
+  <h1>Tá Chovendo Hambúrguer</h1>
+  <p class="subtitulo-topo">"Quando o sabor cai do céu" ☔🍔</p>
+  <div class="badges">
+    <span class="badge">🔥 Feito na hora</span>
+    <span class="badge">🚀 Entrega rápida</span>
+    <span class="badge">💯 Ingredientes frescos</span>
+  </div>
+</header>
+
+<div class="abas">
+  <button class="aba ativa" onclick="abrirAba('principais', this)">🍔 Pratos Principais</button>
+  <button class="aba" onclick="abrirAba('bebidas', this)">🥤 Bebidas</button>
+  <button class="aba" onclick="abrirAba('batata', this)">🍟 Batata Frita</button>
+</div>
+
+<div class="conteudo ativo" id="principais">
+  <h2 class="titulo-secao">🍔 Pratos Principais</h2>
+  <p class="subtitulo-secao">Escolha seu favorito e adicione ao carrinho</p>
+  <div class="grade">
+    <div class="item"><img src="img/xburger.jfif" alt="X-Burger"><div class="item-info"><h3>X-Burger</h3><span class="preco">R$ 25,00</span><button class="btn-add" onclick="addSimples('X-Burger', 25)">Adicionar 🛒</button></div></div>
+    <div class="item"><img src="img/xsalada.jfif" alt="X-Salada"><div class="item-info"><h3>X-Salada</h3><span class="preco">R$ 20,00</span><button class="btn-add" onclick="addSimples('X-Salada', 20)">Adicionar 🛒</button></div></div>
+    <div class="item"><img src="img/xbacon.jfif" alt="X-Bacon"><div class="item-info"><h3>X-Bacon</h3><span class="preco">R$ 30,00</span><button class="btn-add" onclick="addSimples('X-Bacon', 30)">Adicionar 🛒</button></div></div>
+    <div class="item"><img src="img/xegg.jfif" alt="X-Egg"><div class="item-info"><h3>X-Egg</h3><span class="preco">R$ 19,00</span><button class="btn-add" onclick="addSimples('X-Egg', 19)">Adicionar 🛒</button></div></div>
+    <div class="item"><img src="img/xeggbacon.jfif" alt="X-Egg Bacon"><div class="item-info"><h3>X-Egg Bacon</h3><span class="preco">R$ 35,00</span><button class="btn-add" onclick="addSimples('X-Egg Bacon', 35)">Adicionar 🛒</button></div></div>
+    <div class="item"><img src="img/xtudo.jfif" alt="X-Tudo"><div class="item-info"><h3>X-Tudo</h3><span class="preco">R$ 40,00</span><button class="btn-add" onclick="addSimples('X-Tudo', 40)">Adicionar 🛒</button></div></div>
+    <div class="item"><img src="img/cheeseburger.jfif" alt="Cheeseburger"><div class="item-info"><h3>Cheeseburger</h3><span class="preco">R$ 40,00</span><button class="btn-add" onclick="addSimples('Cheeseburger', 40)">Adicionar 🛒</button></div></div>
+    <div class="item"><img src="img/baconburger.jfif" alt="Bacon Burger"><div class="item-info"><h3>Bacon Burger</h3><span class="preco">R$ 40,00</span><button class="btn-add" onclick="addSimples('Bacon Burger', 40)">Adicionar 🛒</button></div></div>
+    <div class="item"><img src="img/cheesebacon.jfif" alt="Cheese Bacon"><div class="item-info"><h3>Cheese Bacon</h3><span class="preco">R$ 30,00</span><button class="btn-add" onclick="addSimples('Cheese Bacon', 30)">Adicionar 🛒</button></div></div>
+    <div class="item"><img src="img/cheeseegg.jfif" alt="Cheese Egg"><div class="item-info"><h3>Cheese Egg</h3><span class="preco">R$ 25,00</span><button class="btn-add" onclick="addSimples('Cheese Egg', 25)">Adicionar 🛒</button></div></div>
+    <div class="item"><img src="img/duplocheese.jfif" alt="Duplo Cheeseburger"><div class="item-info"><h3>Duplo Cheeseburger</h3><span class="preco">R$ 40,00</span><button class="btn-add" onclick="addSimples('Duplo Cheeseburger', 40)">Adicionar 🛒</button></div></div>
+    <div class="item"><img src="img/triplocheese.jfif" alt="Triplo Cheeseburger"><div class="item-info"><h3>Triplo Cheeseburger</h3><span class="preco">R$ 45,00</span><button class="btn-add" onclick="addSimples('Triplo Cheeseburger', 45)">Adicionar 🛒</button></div></div>
+    <div class="item"><img src="img/tempestade.jfif" alt="Tempestade"><div class="item-info"><h3>Tempestade ⭐</h3><span class="preco">R$ 50,00</span><button class="btn-add" onclick="addSimples('Tempestade (Especial da Casa)', 50)">Adicionar 🛒</button></div></div>
+  </div>
+</div>
+
+<div class="conteudo" id="bebidas">
+  <h2 class="titulo-secao">🥤 Bebidas</h2>
+  <p class="subtitulo-secao">Geladinhas pra acompanhar seu lanche</p>
+  <div class="grade">
+    <div class="item"><img src="img/agua.jfif" alt="Água"><div class="item-info"><h3>Água</h3><span class="preco">R$ 2,00</span><button class="btn-add" onclick="addSimples('Água', 2)">Adicionar 🛒</button></div></div>
+    <div class="item"><img src="img/refrigerante.jfif" alt="Refrigerante"><div class="item-info"><h3>Refrigerante</h3><span class="preco">R$ 10,00</span><button class="btn-add" onclick="abrirModal('refrigerante')">Adicionar 🛒</button></div></div>
+    <div class="item"><img src="img/suco.jfif" alt="Suco"><div class="item-info"><h3>Suco Natural</h3><span class="preco">R$ 6,00</span><button class="btn-add" onclick="abrirModal('suco')">Adicionar 🛒</button></div></div>
+    <div class="item"><img src="img/limonada.jfif" alt="Limonada"><div class="item-info"><h3>Limonada</h3><span class="preco">R$ 7,00</span><button class="btn-add" onclick="addSimples('Limonada', 7)">Adicionar 🛒</button></div></div>
+  </div>
+</div>
+
+<div class="conteudo" id="batata">
+  <h2 class="titulo-secao">🍟 Batata Frita</h2>
+  <p class="subtitulo-secao">Crocante por fora, macia por dentro</p>
+  <div class="grade">
+    <div class="item"><img src="img/batata.jfif" alt="Batata Frita"><div class="item-info"><h3>Batata Frita</h3><span class="preco">A partir de R$ 5,00</span><button class="btn-add" onclick="abrirModal('batata')">Adicionar 🛒</button></div></div>
+  </div>
+</div>
+
+<section class="sobre">
+  <h2>🧡 Sobre Nós</h2>
+  <p>No <strong>Tá Chovendo Hambúrguer</strong>, a gente acredita que comida boa é aquela que aquece o coração.</p>
+  <p>Cada hambúrguer é preparado na hora, com ingredientes fresquinhos e muito carinho. Do pão ao recheio, tudo é pensado pra você dar aquela mordida e sentir o sabor cair do céu.</p>
+</section>
+
+<div class="diferenciais">
+  <div class="diferencial"><span class="icone">🔥</span><h4>Feito na Hora</h4><p>Nada de esquentar. Seu lanche sai quentinho do fogo.</p></div>
+  <div class="diferencial"><span class="icone">🚀</span><h4>Entrega Rápida</h4><p>Chega rapidinho na sua casa, do jeitinho que você pediu.</p></div>
+  <div class="diferencial"><span class="icone">🥇</span><h4>Qualidade Top</h4><p>Ingredientes selecionados pra dar aquele sabor especial.</p></div>
+  <div class="diferencial"><span class="icone">💜</span><h4>Feito com Amor</h4><p>Cada pedido é preparado com dedicação e carinho.</p></div>
+</div>
+
+<div class="carrinho-flutuante" onclick="abrirCarrinho()">
+  🛒
+  <span class="contador" id="contador">0</span>
+</div>
+
+<div class="modal-fundo" id="modal-fundo">
+  <div class="modal" id="modal-conteudo"></div>
+</div>
+
+<footer>
+  <div class="footer-titulo">🍔 Tá Chovendo Hambúrguer</div>
+  <div class="info-grid">
+    <div><strong>📍 Endereço</strong>Entregamos em toda a cidade</div>
+    <div><strong>📱 WhatsApp</strong><a href="https://wa.me/5582991676365" target="_blank">(82) 99167-6365</a></div>
+    <div><strong>⏰ Horário</strong>Todos os dias, das 18h às 23h</div>
+  </div>
+  <div class="copy">© 2025 Tá Chovendo Hambúrguer — Feito com <span class="coracao">🧡</span> pra você</div>
+</footer><script>
+let carrinho = [];
+let pedidoAtualId = null;
+
+const PIX_CHAVE = '82991676465';
+const PIX_NOME = 'Jonas Claudio';
+const PIX_CIDADE = 'RIO LARGO';
+
+function gerarPix(valor) {
+  function t(s) { return s.length.toString().padStart(2, '0') + s; }
+
+  const chave = PIX_CHAVE;
+  const nome = PIX_NOME.substring(0, 25).toUpperCase();
+  const cidade = PIX_CIDADE.substring(0, 15).toUpperCase();
+  const txid = 'PEDIDO' + Date.now().toString().slice(-8);
+  const valorStr = valor.toFixed(2);
+
+  const gui = t('br.gov.bcb.pix') + t(chave);
+  const mai = t('00') + t(gui);
+  const merchantAccountInfo = t('26') + mai;
+  const payloadFormat = t('00') + t('01');
+  const merchantCategory = t('52') + t('0000');
+  const currency = t('53') + t('986');
+  const amount = t('54') + t(valorStr);
+  const country = t('58') + t('BR');
+  const merchantName = t('59') + t(nome);
+  const merchantCity = t('60') + t(cidade);
+  const additionalData = t('62') + t('05') + t(txid);
+  const crc16 = t('63') + t('04');
+
+  let payload = payloadFormat + merchantAccountInfo + merchantCategory + currency + amount + country + merchantName + merchantCity + additionalData + crc16;
+
+  function crc(p) {
+    let c = 0xFFFF;
+    for (let i = 0; i < p.length; i++) {
+      c ^= p.charCodeAt(i) << 8;
+      for (let j = 0; j < 8; j++) {
+        c = (c & 0x8000) ? (c << 1) ^ 0x1021 : c << 1;
+        c &= 0xFFFF;
+      }
+    }
+    return c.toString(16).toUpperCase().padStart(4, '0');
+  }
+
+  return payload + crc(payload);
+}
+
+function abrirAba(id, btn) {
+  document.querySelectorAll('.conteudo').forEach(c => c.classList.remove('ativo'));
+  document.querySelectorAll('.aba').forEach(b => b.classList.remove('ativa'));
+  document.getElementById(id).classList.add('ativo');
+  btn.classList.add('ativa');
+}
+
+function atualizarContador() {
+  document.getElementById('contador').textContent = carrinho.length;
+}
+
+function addSimples(nome, preco) {
+  carrinho.push({ nome: nome, preco: preco, detalhe: '' });
+  atualizarContador();
+  alert(nome + ' adicionado! 🛒');
+}
+
+function abrirModal(tipo) {
+  const fundo = document.getElementById('modal-fundo');
+  const conteudo = document.getElementById('modal-conteudo');
+  let html = '';
+
+  if (tipo === 'suco') {
+    html = '<h2>Escolha o sabor do Suco</h2><div class="opcao-grupo">' +
+      '<label class="opcao"><input type="radio" name="sabor-suco" value="Maracujá"><span>Maracujá</span></label>' +
+      '<label class="opcao"><input type="radio" name="sabor-suco" value="Goiaba"><span>Goiaba</span></label>' +
+      '<label class="opcao"><input type="radio" name="sabor-suco" value="Manga"><span>Manga</span></label>' +
+      '</div><div class="botoes-modal"><button class="btn btn-cancelar" onclick="fecharModal()">Cancelar</button>' +
+      '<button class="btn btn-confirmar" onclick="confirmarSuco()">Adicionar</button></div>';
+  }
+
+  if (tipo === 'refrigerante') {
+    html = '<h2>Escolha o Refrigerante</h2><div class="opcao-grupo">' +
+      '<label class="opcao"><input type="radio" name="sabor-refri" value="Coca-Cola"><span>Coca-Cola</span></label>' +
+      '<label class="opcao"><input type="radio" name="sabor-refri" value="Fanta Laranja"><span>Fanta Laranja</span></label>' +
+      '<label class="opcao"><input type="radio" name="sabor-refri" value="Fanta Uva"><span>Fanta Uva</span></label>' +
+      '<label class="opcao"><input type="radio" name="sabor-refri" value="Guaraná"><span>Guaraná</span></label>' +
+      '</div><div class="botoes-modal"><button class="btn btn-cancelar" onclick="fecharModal()">Cancelar</button>' +
+      '<button class="btn btn-confirmar" onclick="confirmarRefri()">Adicionar</button></div>';
+  }
+
+  if (tipo === 'batata') {
+    html = '<h2>Batata Frita</h2><div class="opcao-grupo"><h4>Tamanho</h4>' +
+      '<label class="opcao"><input type="radio" name="tam-batata" value="P" data-preco="5"><span>P — R$ 5,00</span></label>' +
+      '<label class="opcao"><input type="radio" name="tam-batata" value="M" data-preco="10"><span>M — R$ 10,00</span></label>' +
+      '<label class="opcao"><input type="radio" name="tam-batata" value="G" data-preco="15"><span>G — R$ 15,00</span></label>' +
+      '</div><div class="opcao-grupo"><h4>Adicionais (pode marcar vários)</h4>' +
+      '<label class="opcao"><input type="checkbox" name="adicional" value="Molho Cheddar"><span>Molho Cheddar</span></label>' +
+      '<label class="opcao"><input type="checkbox" name="adicional" value="Ketchup"><span>Ketchup</span></label>' +
+      '<label class="opcao"><input type="checkbox" name="adicional" value="Maionese"><span>Maionese</span></label>' +
+      '</div><div class="botoes-modal"><button class="btn btn-cancelar" onclick="fecharModal()">Cancelar</button>' +
+      '<button class="btn btn-confirmar" onclick="confirmarBatata()">Adicionar</button></div>';
+  }
+
+  conteudo.innerHTML = html;
+  fundo.classList.add('ativo');
+}
+
+function fecharModal() {
+  document.getElementById('modal-fundo').classList.remove('ativo');
+}
+
+function confirmarSuco() {
+  const s = document.querySelector('input[name="sabor-suco"]:checked');
+  if (!s) { alert('Escolha um sabor!'); return; }
+  carrinho.push({ nome: 'Suco', preco: 6, detalhe: s.value });
+  atualizarContador();
+  fecharModal();
+  alert('Suco de ' + s.value + ' adicionado! 🛒');
+}
+
+function confirmarRefri() {
+  const s = document.querySelector('input[name="sabor-refri"]:checked');
+  if (!s) { alert('Escolha um sabor!'); return; }
+  carrinho.push({ nome: 'Refrigerante', preco: 10, detalhe: s.value });
+  atualizarContador();
+  fecharModal();
+  alert('Refrigerante ' + s.value + ' adicionado! 🛒');
+}
+
+function confirmarBatata() {
+  const t = document.querySelector('input[name="tam-batata"]:checked');
+  if (!t) { alert('Escolha um tamanho!'); return; }
+  const ad = [];
+  document.querySelectorAll('input[name="adicional"]:checked').forEach(a => ad.push(a.value));
+  const preco = parseInt(t.getAttribute('data-preco'));
+  let detalhe = 'Tamanho ' + t.value;
+  if (ad.length > 0) detalhe += ' + ' + ad.join(', ');
+  carrinho.push({ nome: 'Batata Frita', preco: preco, detalhe: detalhe });
+  atualizarContador();
+  fecharModal();
+  alert('Batata adicionada! 🛒');
+}
+
+function abrirCarrinho() {
+  const fundo = document.getElementById('modal-fundo');
+  const conteudo = document.getElementById('modal-conteudo');
+  let html = '<h2>🛒 Seu Carrinho</h2>';
+
+  if (carrinho.length === 0) {
+    html += '<div class="carrinho-vazio">Seu carrinho tá vazio 😢</div>';
+    html += '<div class="botoes-modal"><button class="btn btn-cancelar" onclick="fecharModal()">Fechar</button></div>';
+  } else {
+    let total = 0;
+    html += '<div class="lista-carrinho">';
+    carrinho.forEach(function(item, i) {
+      total += item.preco;
+      html += '<div class="linha-carrinho"><div class="info-item"><div class="nome">' + item.nome + '</div>';
+      if (item.detalhe) html += '<div class="detalhe">' + item.detalhe + '</div>';
+      html += '</div><div class="valor">R$ ' + item.preco + ',00</div>';
+      html += '<button class="btn-remover" onclick="removerItem(' + i + ')">×</button></div>';
+    });
+    html += '</div>';
+    html += '<div class="total-linha"><span>Total:</span><span>R$ ' + total + ',00</span></div>';
+    html += '<div class="botoes-modal"><button class="btn btn-cancelar" onclick="limparCarrinho()">Limpar</button>' +
+      '<button class="btn btn-confirmar" onclick="finalizar()">Finalizar Pedido</button></div>';
+  }
+
+  conteudo.innerHTML = html;
+  fundo.classList.add('ativo');
+}
+
+function removerItem(i) {
+  carrinho.splice(i, 1);
+  atualizarContador();
+  abrirCarrinho();
+}
+
+function limparCarrinho() {
+  if (confirm('Tem certeza que quer limpar o carrinho?')) {
+    carrinho = [];
+    atualizarContador();
+    abrirCarrinho();
+  }
+}
+
+function finalizar() {
+  if (carrinho.length === 0) return;
+
+  const conteudo = document.getElementById('modal-conteudo');
+  const fundo = document.getElementById('modal-fundo');
+
+  let html = '<h2>📝 Finalizar Pedido</h2>';
+  html += '<div class="opcao-grupo"><h4>Seu nome</h4><input type="text" id="inp-nome" placeholder="Digite seu nome" style="width:100%;padding:12px;border-radius:10px;border:1px solid #333;background:#1a1a1a;color:#fff;font-size:1em;"></div>';
+  html += '<div class="opcao-grupo"><h4>Telefone</h4><input type="text" id="inp-tel" placeholder="(82) 99999-9999" style="width:100%;padding:12px;border-radius:10px;border:1px solid #333;background:#1a1a1a;color:#fff;font-size:1em;"></div>';
+  html += '<div class="opcao-grupo"><h4>Endereço de entrega</h4><input type="text" id="inp-end" placeholder="Rua, número, bairro" style="width:100%;padding:12px;border-radius:10px;border:1px solid #333;background:#1a1a1a;color:#fff;font-size:1em;"></div>';
+  html += '<div class="opcao-grupo"><h4>Forma de pagamento</h4>' +
+    '<label class="opcao"><input type="radio" name="pag" value="Pix" onchange="mostrarPix()"><span>Pix (pague agora)</span></label>' +
+    '<label class="opcao"><input type="radio" name="pag" value="Cartão"><span>Cartão (na entrega)</span></label>' +
+    '<label class="opcao"><input type="radio" name="pag" value="Dinheiro"><span>Dinheiro</span></label>' +
+    '</div>';
+  html += '<div id="area-pix"></div>';
+  html += '<div class="botoes-modal"><button class="btn btn-cancelar" onclick="abrirCarrinho()">Voltar</button>' +
+    '<button class="btn btn-confirmar" id="btn-enviar" onclick="enviarPedido()">Enviar Pedido</button></div>';
+
+  conteudo.innerHTML = html;
+  fundo.classList.add('ativo');
+}
+
+function mostrarPix() {
+  const area = document.getElementById('area-pix');
+  let total = 0;
+  carrinho.forEach(function(item) { total += item.preco; });
+
+  const codigo = gerarPix(total);
+  const qrUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=' + encodeURIComponent(codigo);
+
+  area.innerHTML =
+    '<div class="pix-box">' +
+      '<p style="color:#1a1a1a;font-weight:bold;margin-bottom:10px;">Escaneie o QR Code ou copie o código</p>' +
+      '<img src="' + qrUrl + '" alt="QR Code Pix">' +
+      '<div class="pix-codigo">' + codigo + '</div>' +
+      '<button class="btn-copiar" onclick="copiarPix(\'' + codigo + '\')">📋 Copiar código Pix</button>' +
+    '</div>' +
+    '<p style="color:#ff9500;font-size:0.85em;text-align:center;margin-bottom:15px;">Depois de pagar, clique em "Enviar Pedido".</p>';
+}
+
+function copiarPix(codigo) {
+  navigator.clipboard.writeText(codigo).then(function() {
+    alert('Código Pix copiado! ✅');
+  });
+}
+
+function enviarPedido() {
+  const nome = document.getElementById('inp-nome').value.trim();
+  const tel = document.getElementById('inp-tel').value.trim();
+  const end = document.getElementById('inp-end').value.trim();
+  const pag = document.querySelector('input[name="pag"]:checked');
+
+  if (!nome) { alert('Digite seu nome!'); return; }
+  if (!tel) { alert('Digite seu telefone!'); return; }
+  if (!end) { alert('Digite seu endereço!'); return; }
+  if (!pag) { alert('Escolha a forma de pagamento!'); return; }
+
+  let total = 0;
+  carrinho.forEach(function(item) { total += item.preco; });
+
+  fetch('/api/pedido', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      cliente: nome,
+      telefone: tel,
+      endereco: end,
+      pagamento: pag.value,
+      itens: carrinho,
+      total: total
+    })
+  })
+  .then(function(res) { return res.json(); })
+  .then(function(dados) {
+    if (dados.sucesso) {
+      if (pag.value === 'Pix') {
+        alert('Pedido #' + dados.id + ' enviado!\n\nSeu pedido só será preparado depois que o Pix for confirmado. 🍔');
+      } else {
+        alert('Pedido #' + dados.id + ' enviado! 🍔');
+      }
+      carrinho = [];
+      atualizarContador();
+      fecharModal();
+    } else {
+      alert('Erro ao enviar.');
+    }
+  })
+  .catch(function() { alert('Erro de conexão.'); });
+}
+
+document.getElementById('modal-fundo').addEventListener('click', function(e) {
+  if (e.target === this) fecharModal();
+});
+</script>
+</body>
+</html>
